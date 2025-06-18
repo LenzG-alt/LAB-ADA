@@ -177,27 +177,45 @@ import networkx as nx
 from heapdict import heapdict
 import random
 
-def randomGraph(n, p, wts=[1]):
+def randomGraph(n, num_edges_per_vertex=2, wts=[1]):
     G = Graph()
     V = [Vertex(i) for i in range(n)]
-    for v in V:
-        G.addVertex(v)
-    for v in V:
-        for w in V:
-            if v != w and random.random() < p:
-                G.addDiEdge(v, w, wt=random.choice(wts))
+    for v_obj in V: # Use v_obj to avoid conflict with outer v
+        G.addVertex(v_obj)
+
+    if n == 0:
+        return G
+
+    for v_obj in V: # Use v_obj to avoid conflict with outer v
+        # Ensure we don't try to pick more neighbors than available
+        actual_num_edges = min(num_edges_per_vertex, n - 1 if n > 0 else 0)
+        if actual_num_edges <= 0 and n > 1: # if n=1, actual_num_edges can be 0
+             continue
+
+
+        # Create a list of potential neighbors, excluding v_obj itself
+        potential_neighbors = [neighbor for neighbor in V if neighbor != v_obj]
+
+        # Shuffle potential_neighbors to pick randomly
+        random.shuffle(potential_neighbors)
+
+        # Select the first 'actual_num_edges' neighbors
+        selected_neighbors = potential_neighbors[:actual_num_edges]
+
+        for neighbor_obj in selected_neighbors: # Use neighbor_obj
+            G.addDiEdge(v_obj, neighbor_obj, wt=random.choice(wts))
     return G
 
 
 def pruebaDijkstraArray(lst):
     n = len(lst)
-    G = randomGraph(n, p=0.5)
+    G = randomGraph(n)
     inicio = G.vertices[0]
     dijkstraDumb(inicio, G)
 
 def pruebaDijkstraHeap(lst):
     n = len(lst)
-    G = randomGraph(n, p=0.5)
+    G = randomGraph(n)
     inicio = G.vertices[0]
     dijkstraHeap(inicio, G)
 
@@ -214,4 +232,5 @@ plt.ylabel('Tiempo promedio (ms)')
 plt.title('Comparación Dijkstra: Array vs Heap (con randomGraph)')
 plt.legend()
 plt.grid(True)
-plt.show()
+plt.savefig('dijkstra_comparison_plot.png')
+print("Plot saved to dijkstra_comparison_plot.png")
