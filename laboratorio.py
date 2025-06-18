@@ -164,9 +164,15 @@ def dijkstraHeap(start, G):
         if dist_u == math.inf:
             continue  # nodo inalcanzable
 
+        # Optional: If a shorter path to u was found after it was added to the queue
+        # with distance dist_u, then u.estD might be less than dist_u.
+        # In some Dijkstra implementations, such items are ignored.
+        # if u.estD < dist_u:
+        #    continue
+
         for v, wt in u.getOutNeighborsWithWeights():
-            if u.estD + wt < v.estD:
-                v.estD = u.estD + wt
+            if dist_u + wt < v.estD: # <<< MODIFIED: use dist_u
+                v.estD = dist_u + wt # <<< MODIFIED: use dist_u
                 v.parent = u
                 pq[v] = v.estD  # actualizar en la cola
 
@@ -177,45 +183,27 @@ import networkx as nx
 from heapdict import heapdict
 import random
 
-def randomGraph(n, num_edges_per_vertex=2, wts=[1]):
+def randomGraph(n, p, wts=[1]):
     G = Graph()
     V = [Vertex(i) for i in range(n)]
-    for v_obj in V: # Use v_obj to avoid conflict with outer v
-        G.addVertex(v_obj)
-
-    if n == 0:
-        return G
-
-    for v_obj in V: # Use v_obj to avoid conflict with outer v
-        # Ensure we don't try to pick more neighbors than available
-        actual_num_edges = min(num_edges_per_vertex, n - 1 if n > 0 else 0)
-        if actual_num_edges <= 0 and n > 1: # if n=1, actual_num_edges can be 0
-             continue
-
-
-        # Create a list of potential neighbors, excluding v_obj itself
-        potential_neighbors = [neighbor for neighbor in V if neighbor != v_obj]
-
-        # Shuffle potential_neighbors to pick randomly
-        random.shuffle(potential_neighbors)
-
-        # Select the first 'actual_num_edges' neighbors
-        selected_neighbors = potential_neighbors[:actual_num_edges]
-
-        for neighbor_obj in selected_neighbors: # Use neighbor_obj
-            G.addDiEdge(v_obj, neighbor_obj, wt=random.choice(wts))
+    for v in V:
+        G.addVertex(v)
+    for v in V:
+        for w in V:
+            if v != w and random.random() < p:
+                G.addDiEdge(v, w, wt=random.choice(wts))
     return G
 
 
 def pruebaDijkstraArray(lst):
     n = len(lst)
-    G = randomGraph(n)
+    G = randomGraph(n, p=0.5)
     inicio = G.vertices[0]
     dijkstraDumb(inicio, G)
 
 def pruebaDijkstraHeap(lst):
     n = len(lst)
-    G = randomGraph(n)
+    G = randomGraph(n, p=0.5)
     inicio = G.vertices[0]
     dijkstraHeap(inicio, G)
 
@@ -232,5 +220,5 @@ plt.ylabel('Tiempo promedio (ms)')
 plt.title('Comparación Dijkstra: Array vs Heap (con randomGraph)')
 plt.legend()
 plt.grid(True)
-plt.savefig('dijkstra_comparison_plot.png')
-print("Plot saved to dijkstra_comparison_plot.png")
+plt.savefig('dijkstra_comparison_dense_refined_heap.png')
+print("Plot saved to dijkstra_comparison_dense_refined_heap.png")
