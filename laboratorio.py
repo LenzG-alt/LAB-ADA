@@ -164,9 +164,15 @@ def dijkstraHeap(start, G):
         if dist_u == math.inf:
             continue  # nodo inalcanzable
 
+        # Optional: If a shorter path to u was found after it was added to the queue
+        # with distance dist_u, then u.estD might be less than dist_u.
+        # In some Dijkstra implementations, such items are ignored.
+        # if u.estD < dist_u:
+        #    continue
+
         for v, wt in u.getOutNeighborsWithWeights():
-            if u.estD + wt < v.estD:
-                v.estD = u.estD + wt
+            if dist_u + wt < v.estD: # <<< MODIFIED: use dist_u
+                v.estD = dist_u + wt # <<< MODIFIED: use dist_u
                 v.parent = u
                 pq[v] = v.estD  # actualizar en la cola
 
@@ -214,4 +220,5 @@ plt.ylabel('Tiempo promedio (ms)')
 plt.title('Comparación Dijkstra: Array vs Heap (con randomGraph)')
 plt.legend()
 plt.grid(True)
-plt.show()
+plt.savefig('dijkstra_comparison_dense_refined_heap.png')
+print("Plot saved to dijkstra_comparison_dense_refined_heap.png")
